@@ -191,7 +191,33 @@
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const ICE = { iceServers:[{urls:'stun:stun.l.google.com:19302'}] };
+  var myPeerConnection = new RTCPeerConnection({
+  iceServers: [
+      {
+        urls: "stun:stun.relay.metered.ca:80",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80",
+        username: "0ad2f265ea5a883958bd2c71",
+        credential: "VCety75DCrmZYOAA",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80?transport=tcp",
+        username: "0ad2f265ea5a883958bd2c71",
+        credential: "VCety75DCrmZYOAA",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:443",
+        username: "0ad2f265ea5a883958bd2c71",
+        credential: "VCety75DCrmZYOAA",
+      },
+      {
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: "0ad2f265ea5a883958bd2c71",
+        credential: "VCety75DCrmZYOAA",
+      },
+  ],
+});
 
   // ---------- firebase ----------
   let db = null, firebaseOk = false;
