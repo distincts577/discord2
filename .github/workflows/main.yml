@@ -26,6 +26,6 @@ jobs:
         with:
           name: rede-${{ matrix.os }}
           path: |
-            rede-desktop/release/*.exe
-            rede-desktop/release/*.dmg
-            rede-desktop/release/*.AppImage
+            rede/release/*.exe
+            rede/release/*.dmg
+            rede/release/*.AppImage
