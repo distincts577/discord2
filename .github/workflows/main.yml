@@ -1,4 +1,4 @@
-name: build-desktop-app
+name: rede
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: rede-desktop
+        working-directory: rede
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
