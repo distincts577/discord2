@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Compartilhar tela</title>
+<style>
+  :root{
+    --bg:#232428; --card:#2b2d31; --field:#1e1f22; --border:#3a3c42;
+    --text:#f2f3f5; --muted:#949ba4; --blurple:#5865f2; --online:#23a55a;
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0; font-family:-apple-system,"Segoe UI",Inter,Arial,sans-serif;
+    background:var(--bg); color:var(--text); -webkit-user-select:none;
+    display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  }
+  .screen{ display:none; flex:1; min-height:0; flex-direction:column; padding:20px 22px; }
+  .screen.on{ display:flex; }
+  h1{ font-size:17px; font-weight:700; margin:0 0 4px; text-align:center; }
+  .subtitle{ font-size:12.5px; color:var(--muted); text-align:center; margin:0 0 16px; }
+
+  /* ---- etapa 1: escolher fonte ---- */
+  #tabs{ display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+  .tab{ padding:8px 4px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .tab.active{ color:var(--text); border-color:var(--blurple); }
+  #grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; flex:1; min-height:0; overflow-y:auto; align-content:start; }
+  .item{ background:var(--card); border:2px solid transparent; border-radius:8px; padding:8px; cursor:pointer; text-align:left; }
+  .item:hover{ border-color:#54565c; }
+  .item.selected{ border-color:var(--blurple); background:#35374a; }
+  .item img{ width:100%; height:100px; object-fit:contain; background:#111214; border-radius:4px; display:block; }
+  .item span{ display:block; font-size:12px; margin-top:7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #empty{ color:var(--muted); font-size:12.5px; text-align:center; padding:40px 0; }
+
+  /* ---- etapa 2: configurações ---- */
+  .field-label{ font-size:11px; font-weight:700; letter-spacing:0.3px; text-transform:uppercase; color:var(--muted); margin:14px 0 6px; }
+  .field-label:first-child{ margin-top:0; }
+  #preview-row{ display:flex; align-items:center; gap:10px; background:var(--field); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+  #preview-row img{ width:64px; height:44px; object-fit:contain; background:#111214; border-radius:4px; flex-shrink:0; }
+  #preview-row .nm{ flex:1; font-size:13.5px; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #preview-row button{ background:#4e5058; color:#fff; border:0; border-radius:6px; padding:7px 12px; font-size:12.5px; font-weight:600; cursor:pointer; flex-shrink:0; }
+  #preview-row button:hover{ background:#5c5e66; }
+
+  .checkrow{ display:flex; align-items:center; gap:9px; padding:8px 0; font-size:13.5px; cursor:pointer; }
+  .checkrow input{ width:17px; height:17px; accent-color:var(--blurple); cursor:pointer; }
+
+  #channel-box{ background:var(--field); border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:13.5px; display:flex; align-items:center; gap:8px; }
+
+  .seg{ display:flex; gap:6px; }
+  .seg button{ flex:1; background:var(--field); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; }
+  .seg button:hover{ border-color:#54565c; }
+  .seg button.active{ background:var(--blurple); border-color:var(--blurple); color:#fff; }
+  .quality-row{ display:flex; gap:16px; }
+  .quality-col{ flex:1; }
+  .quality-col .field-label{ margin-top:0; }
+
+  #actions{ margin-top:auto; padding-top:18px; display:flex; justify-content:space-between; gap:8px; }
+  #actions .right{ display:flex; gap:8px; }
+  button.btn{ border:0; border-radius:6px; padding:10px 18px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .btn-ghost{ background:transparent; color:var(--text); border:1px solid var(--border) !important; }
+  .btn-ghost:hover{ background:var(--card); }
+  .btn-secondary{ background:#4e5058; color:#fff; }
+  .btn-secondary:hover{ background:#5c5e66; }
+  .btn-primary{ background:var(--blurple); color:#fff; }
+  .btn-primary:hover{ background:#4752c4; }
+  .btn-primary:disabled{ opacity:.5; cursor:default; }
+</style>
+</head>
+<body>
+
+  <!-- ETAPA 1: escolher janela/tela -->
+  <div class="screen on" id="screen-pick">
+    <h1>Compartilhar tela</h1>
+    <p class="subtitle">Escolha o que você quer transmitir na chamada.</p>
+    <div id="tabs">
+      <div class="tab active" data-kind="window">Aplicativos</div>
+      <div class="tab" data-kind="screen">Telas</div>
+    </div>
+    <div id="grid"></div>
+    <div id="empty" style="display:none;">Nada disponível aqui.</div>
+    <div id="actions">
+      <button class="btn btn-ghost" id="cancel-1">Cancelar</button>
+      <div class="right"><button class="btn btn-primary" id="next-1" disabled>Continuar</button></div>
+    </div>
+  </div>
+
+  <!-- ETAPA 2: qualidade / áudio / aviso -->
+  <div class="screen" id="screen-settings">
+    <h1>Compartilhar tela</h1>
+    <p class="subtitle" id="settings-sub">&nbsp;</p>
+
+    <div class="field-label">O que você vai transmitir</div>
+    <div id="preview-row">
+      <img id="preview-thumb" src="">
+      <span class="nm" id="preview-name"></span>
+      <button id="change-btn">Trocar</button>
+    </div>
+
+    <label class="checkrow"><input type="checkbox" id="audio-check"><span>Também compartilhar o áudio</span></label>
+
+    <div class="field-label">Canal de transmissão</div>
+    <div id="channel-box"><span>🔊</span><span id="channel-name">canal de voz atual</span></div>
+
+    <label class="checkrow"><input type="checkbox" id="notify-check"><span>Avisar o pessoal do servidor que comecei a transmitir</span></label>
+
+    <div class="field-label">Qualidade da transmissão</div>
+    <div class="quality-row">
+      <div class="quality-col">
+        <div class="field-label">Resolução</div>
+        <div class="seg" id="res-seg">
+          <button data-val="720">720p</button>
+          <button data-val="1080" class="active">1080p</button>
+          <button data-val="source">Original</button>
+        </div>
+      </div>
+      <div class="quality-col">
+        <div class="field-label">Taxa de quadros</div>
+        <div class="seg" id="fps-seg">
+          <button data-val="15">15</button>
+          <button data-val="30" class="active">30</button>
+          <button data-val="60">60</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="actions">
+      <button class="btn btn-ghost" id="back-2">Voltar</button>
+      <div class="right"><button class="btn btn-primary" id="go-live">Ir ao vivo</button></div>
+    </div>
+  </div>
+
+<script>
+  let allSources = [];
+  let voiceChannel = null;
+  let activeKind = 'window';
+  let selected = null; // {id, name, thumbnail, kind}
+  let resolution = '1080';
+  let frameRate = '30';
+
+  const $ = id => document.getElementById(id);
+  const grid = $('grid');
+
+  window.pickerAPI.onData(({ sources, voiceChannel: vc }) => {
+    allSources = sources || [];
+    voiceChannel = vc;
+    $('channel-name').textContent = voiceChannel || 'canal de voz atual';
+    renderGrid();
+  });
+
+  document.querySelectorAll('#tabs .tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      activeKind = tab.dataset.kind;
+      selected = null; $('next-1').disabled = true;
+      renderGrid();
+    });
+  });
+
+  function renderGrid(){
+    const list = allSources.filter(s=>s.kind===activeKind);
+    grid.innerHTML = '';
+    $('empty').style.display = list.length ? 'none' : 'block';
+    list.forEach(s=>{
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `<img src="${s.thumbnail}"><span>${s.name}</span>`;
+      el.addEventListener('click', ()=>{
+        document.querySelectorAll('.item').forEach(i=>i.classList.remove('selected'));
+        el.classList.add('selected');
+        selected = s;
+        $('next-1').disabled = false;
+      });
+      el.addEventListener('dblclick', ()=>{ selected = s; goToSettings(); });
+      grid.appendChild(el);
+    });
+  }
+
+  $('cancel-1').addEventListener('click', ()=> window.pickerAPI.cancel());
+  $('next-1').addEventListener('click', goToSettings);
+
+  function goToSettings(){
+    if(!selected) return;
+    $('screen-pick').classList.remove('on');
+    $('screen-settings').classList.add('on');
+    $('preview-thumb').src = selected.thumbnail;
+    $('preview-name').textContent = selected.name;
+    $('settings-sub').textContent = 'Ajuste a qualidade antes de ir ao vivo.';
+  }
+  $('change-btn').addEventListener('click', ()=>{
+    $('screen-settings').classList.remove('on');
+    $('screen-pick').classList.add('on');
+  });
+  $('back-2').addEventListener('click', ()=>{
+    $('screen-settings').classList.remove('on');
+    $('screen-pick').classList.add('on');
+  });
+
+  $('res-seg').addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    $('res-seg').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); resolution = btn.dataset.val;
+  });
+  $('fps-seg').addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    $('fps-seg').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); frameRate = btn.dataset.val;
+  });
+
+  $('go-live').addEventListener('click', ()=>{
+    if(!selected) return;
+    window.pickerAPI.confirm({
+      sourceId: selected.id,
+      audio: $('audio-check').checked,
+      notify: $('notify-check').checked,
+      resolution,
+      frameRate,
+    });
+  });
+</script>
+</body>
+</html>
