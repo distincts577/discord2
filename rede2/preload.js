@@ -1,3 +1,0 @@
-node_modules/
-release/
-.DS_Store
